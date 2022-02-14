@@ -4,10 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author zhibo
@@ -35,6 +32,9 @@ public class MainFrame extends JFrame implements ActionListener {
 
     ButtonGroup handGroup = new ButtonGroup();
     TileButton[] hands = new TileButton[14];
+    String text = "你的选择是";
+    JLabel choiceTextLabel = new JLabel(text);
+    JLabel choiceTileLabel = new JLabel();
 
     Map<String, TileButton> tileMap = new HashMap<>();
     Map<String, ImageIcon> tileImageMap = new HashMap<>();
@@ -72,22 +72,23 @@ public class MainFrame extends JFrame implements ActionListener {
         confirmPanel.add(submitButton);
         confirmPanel.add(nextButton);
 
-        hands[0] = tileMap.get("6p");
-        hands[1] = tileMap.get("7p");
-        hands[2] = tileMap.get("7p");
-        hands[3] = tileMap.get("8p");
-        hands[4] = tileMap.get("1s");
-        hands[5] = tileMap.get("1s");
-        hands[6] = tileMap.get("2s");
-        hands[7] = tileMap.get("2s");
-        hands[8] = tileMap.get("3s");
-        hands[9] = tileMap.get("4s");
-        hands[10] = tileMap.get("5s");
-        hands[11] = tileMap.get("7z");
-        hands[12] = tileMap.get("7z");
-        hands[13] = tileMap.get("0p");
+        hands[0] = new TileButton("6p", tileImageMap.get("6p"));
+        hands[1] = new TileButton("7p", tileImageMap.get("7p"));
+        hands[2] = new TileButton("7p", tileImageMap.get("7p"));
+        hands[3] = new TileButton("8p", tileImageMap.get("8p"));
+        hands[4] = new TileButton("1s", tileImageMap.get("1s"));
+        hands[5] = new TileButton("1s", tileImageMap.get("1s"));
+        hands[6] = new TileButton("2s", tileImageMap.get("2s"));
+        hands[7] = new TileButton("2s", tileImageMap.get("2s"));
+        hands[8] = new TileButton("3s", tileImageMap.get("3s"));
+        hands[9] = new TileButton("4s", tileImageMap.get("4s"));
+        hands[10] = new TileButton("5s", tileImageMap.get("5s"));
+        hands[11] = new TileButton("7z", tileImageMap.get("7z"));
+        hands[12] = new TileButton("7z", tileImageMap.get("7z"));
+        hands[13] = new TileButton("0p", tileImageMap.get("0p"));
 
         for (int i = 0; i < 14; i++) {
+            hands[i].addActionListener(this);
             handGroup.add(hands[i]);
             handPanel.add(hands[i]);
         }
@@ -125,9 +126,22 @@ public class MainFrame extends JFrame implements ActionListener {
         } else {
             Object source = e.getSource();
             if (source instanceof TileButton) {
-                System.out.println(((TileButton)source).getTile());
+                String tile = ((TileButton)source).getTile();
+                System.out.println(tile);
+                choiceTileLabel.setIcon(tileImageMap.get(tile));
+                resultPanel.add(choiceTextLabel);
+                resultPanel.add(choiceTileLabel);
+                revalidate();
             }
 
+            if (source == submitButton){
+                Enumeration<AbstractButton> enumeration = handGroup.getElements();
+                while (enumeration.hasMoreElements()){
+                    enumeration.nextElement().setEnabled(false);
+                }
+                riichiCheck.setEnabled(false);
+                revalidate();
+            }
         }
     }
 }
