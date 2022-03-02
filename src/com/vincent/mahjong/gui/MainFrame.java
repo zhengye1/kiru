@@ -1,19 +1,16 @@
 package com.vincent.mahjong.gui;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
 import java.io.*;
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.List;
 
 /**
- * @author zhibo
+ * @author Vincent Zheng
  */
 public class MainFrame extends JFrame implements ActionListener {
 
@@ -22,6 +19,7 @@ public class MainFrame extends JFrame implements ActionListener {
     JLabel situationLabel;
     JLabel displayDoraLabel;
 
+    int averageAnalyzeHeight = 0;
     // Create Hand Panel
     JPanel handPanel = new JPanel();
 
@@ -36,7 +34,8 @@ public class MainFrame extends JFrame implements ActionListener {
 
     // Create Analyze Panel
     JPanel analyzePanel = new JPanel();
-    JLabel bookAnalyzeIcon = new JLabel();
+    JLabel analyzeLabel = new JLabel();
+    JLabel bookAnalyzeLabel = new JLabel();
 
     JButton submitButton = new JButton("提交");
     JButton nextButton = new JButton("下一题");
@@ -60,6 +59,7 @@ public class MainFrame extends JFrame implements ActionListener {
 
     Map<String, ImageIcon> tileImageMap = new HashMap<>();
     Map<String, ImageIcon> displayDoraMap = new HashMap<>();
+    Map<String, ImageIcon> analyzeMap = new HashMap<>();
     final String ROOTPATH = "../../../../resources/";
 
     public MainFrame()
@@ -85,10 +85,18 @@ public class MainFrame extends JFrame implements ActionListener {
         for (String tile : Arrays.asList(tileString)) {
             ImageIcon icon = new ImageIcon(getClass().getResource(ROOTPATH + tile + ".png"));
             tileImageMap.put(tile, icon);
-            displayDoraMap.put("d" + tile,
-                new ImageIcon(getClass().getResource(ROOTPATH +"d" + tile + ".png")));
+            displayDoraMap.put("d" + tile, new ImageIcon(getClass().getResource(ROOTPATH + "d" + tile + ".png")));
         }
 
+        // load all the analyze picture
+        for (int i = 1; i <= 3; i++) {
+            ImageIcon analyzeIcon = new ImageIcon(getClass().getResource(ROOTPATH + i + "a.jpg"));
+            averageAnalyzeHeight += analyzeIcon.getIconHeight();
+            System.out.println("analyzeIcon Height?" + analyzeIcon.getIconHeight());
+            analyzeMap.put("" + i, analyzeIcon);
+        }
+
+        System.out.println("Average height " + averageAnalyzeHeight / 3);
         submitButton.addActionListener(this);
         nextButton.addActionListener(this);
         nextButton.setEnabled(false);
@@ -99,6 +107,9 @@ public class MainFrame extends JFrame implements ActionListener {
 
         situationLabel = new JLabel();
         displayDoraLabel = new JLabel();
+        //analyzePanel.setPreferredSize(new Dimension(900, 300));
+        analyzeLabel = new JLabel("解析");
+        //analyzePanel.add(analyzeLabel);
 
         // Load the question
         loadQuestion();
@@ -110,11 +121,8 @@ public class MainFrame extends JFrame implements ActionListener {
         handPanel.add(riichiCheck);
 
         JLabel resultLabel = new JLabel("结果");
-        //JLabel analyzeLabel = new JLabel("解析");
 
         resultPanel.add(resultLabel);
-        //analyzePanel.add(analyzeLabel);
-
 
         add(conditionPanel);
         add(handPanel);
@@ -124,11 +132,13 @@ public class MainFrame extends JFrame implements ActionListener {
         add(analyzePanel);
 
         setTitle("何切300/301训练");
-        setLayout(new GridLayout(5, 1));
-        //setPreferredSize(new Dimension(1100, 1000));
+        //setLayout(new GridLayout(5, 1));
+        setLayout(new FlowLayout());
         setLocation(50, 50);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         pack();
+
+
         //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         setVisible(true);
     }
@@ -158,20 +168,16 @@ public class MainFrame extends JFrame implements ActionListener {
             handPanel.add(handButton);
         }
 
-        ImageIcon analyseImage = new ImageIcon(ROOTPATH + q.getQNo()+"a.png");
-        bookAnalyzeIcon.setIcon(analyseImage);
-        bookAnalyzeIcon.setVisible(true);
-        bookAnalyzeIcon.setBounds(200, 200, analyseImage.getIconWidth(), analyseImage.getIconHeight());
-        add(bookAnalyzeIcon);
-        analyzePanel.add(bookAnalyzeIcon);
-        System.out.println(bookAnalyzeIcon);
+        bookAnalyzeLabel.setIcon(analyzeMap.get(q.getQNo()));
+        bookAnalyzeLabel.setVisible(false);
+        analyzePanel.add(bookAnalyzeLabel);
         //revalidate();
 
     }
 
     private void loadQuestion() throws IOException {
         //打开题目文件
-        InputStream in = getClass().getResourceAsStream(ROOTPATH+"kiru.txt");
+        InputStream in = getClass().getResourceAsStream(ROOTPATH + "kiru.txt");
         BufferedReader reader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
         while (reader.ready()) {
             String line = reader.readLine();
@@ -243,9 +249,7 @@ public class MainFrame extends JFrame implements ActionListener {
                     }
                     System.out.println("你答对" + totalQuestion + "中的" + correctAnswer + "题，正确率为" + String.format("%.2f",
                         (correctAnswer / (totalQuestion * 1.0)) * 100) + "%");
-
-                    //解析
-                    bookAnalyzeIcon.setVisible(true);
+                    bookAnalyzeLabel.setVisible(true);
                     revalidate();
                 }
             }
