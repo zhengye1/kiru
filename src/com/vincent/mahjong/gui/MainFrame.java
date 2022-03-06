@@ -46,6 +46,10 @@ public class MainFrame extends JFrame implements ActionListener {
     String text = "你的选择是";
     JLabel choiceTextLabel = new JLabel(text);
     JLabel choiceTileLabel = new JLabel();
+    JLabel riichiLabel = new JLabel("立直");
+
+    String correctPercentageText = "";
+    JLabel correctPercentageLabel = new JLabel(correctPercentageText);
 
     List<Question> questions = new ArrayList<>(300);
     Question q;
@@ -89,14 +93,14 @@ public class MainFrame extends JFrame implements ActionListener {
         }
 
         // load all the analyze picture
-        for (int i = 1; i <= 3; i++) {
-            ImageIcon analyzeIcon = new ImageIcon(getClass().getResource(ROOTPATH + i + "a.jpg"));
+        for (int i = 1; i <= 300; i++) {
+            String index = String.format("%03d", 42);
+            ImageIcon analyzeIcon = new ImageIcon(getClass().getResource(ROOTPATH + index + "a.jpg"));
             averageAnalyzeHeight += analyzeIcon.getIconHeight();
-            System.out.println("analyzeIcon Height?" + analyzeIcon.getIconHeight());
-            analyzeMap.put("" + i, analyzeIcon);
+            System.out.println("Index: " + index + " analyzeIcon Height?" + analyzeIcon.getIconHeight());
+            analyzeMap.put("" + index, analyzeIcon);
         }
 
-        System.out.println("Average height " + averageAnalyzeHeight / 3);
         submitButton.addActionListener(this);
         nextButton.addActionListener(this);
         nextButton.setEnabled(false);
@@ -113,31 +117,36 @@ public class MainFrame extends JFrame implements ActionListener {
 
         // Load the question
         loadQuestion();
-
+        JLabel resultLabel = new JLabel("结果");
+        resultPanel.add(resultLabel);
         //load the first question
         q = questions.get(qIndex);
         createQuestion(q);
 
-        handPanel.add(riichiCheck);
+        resultPanel.add(correctPercentageLabel);
 
-        JLabel resultLabel = new JLabel("结果");
+        getContentPane().setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.gridx = 0;
+        c.gridy = 0;
+        add(conditionPanel, c);
 
-        resultPanel.add(resultLabel);
+        c.gridy = 1;
+        add(handPanel, c);
 
-        add(conditionPanel);
-        add(handPanel);
-
-        add(confirmPanel);
-        add(resultPanel);
-        add(analyzePanel);
+        c.gridy = 2;
+        add(confirmPanel, c);
+        c.gridy = 3;
+        add(resultPanel, c);
+        c.gridy = 4;
+        add(analyzePanel, c);
 
         setTitle("何切300/301训练");
-        //setLayout(new GridLayout(5, 1));
-        setLayout(new FlowLayout());
         setLocation(50, 50);
+        setPreferredSize(new Dimension(1024, 720));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         pack();
-
 
         //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         setVisible(true);
@@ -160,6 +169,11 @@ public class MainFrame extends JFrame implements ActionListener {
             handGroup.remove(ab);
         });
 
+        // 清空hand panel的东西
+        Arrays.asList(handPanel.getComponents()).stream().forEach((ab) -> {
+            handPanel.remove(ab);
+        });
+
         for (String hand : hands) {
             TileButton handButton = new TileButton(hand, tileImageMap.get(hand));
             handButton.addActionListener(this);
@@ -168,6 +182,71 @@ public class MainFrame extends JFrame implements ActionListener {
             handPanel.add(handButton);
         }
 
+        String fulous = q.getFulous();
+
+        if (fulous != null && fulous.length() != 0) {
+            // 用天凤牌谱的写法分别是 c1m2m3m 1p1pp1p
+            // 这暂时不考虑有杠的情况
+            // 也就是 c = 吃只能出现在index 0, 而p = 碰只能出现在index 0, index 2, index 4
+            int index = 0;
+            while (index != fulous.length()) {
+                String fulou = fulous.substring(index, 7);
+                JLabel firstTile = new JLabel();
+                JLabel secondTile = new JLabel();
+                JLabel thirdTile = new JLabel();
+
+                // 吃上家或者碰上家的情况
+                if ("c".equals(fulou.substring(0, 1)) || "p".equals(fulou.substring(0, 1))) {
+                    firstTile.setIcon(
+                        new RotatedIcon(tileImageMap.get(fulou.substring(1, 3)), RotatedIcon.Rotate.DOWN));
+                    secondTile.setIcon(tileImageMap.get(fulou.substring(3, 5)));
+                    thirdTile.setIcon(tileImageMap.get(fulou.substring(5, 7)));
+                } else {
+                    // 碰的情况
+                    if ("p".equals(fulou.substring(2, 3))) {
+                        ImageIcon tileIcon = tileImageMap.get(fulou.substring(0, 2));
+                        secondTile.setIcon(new RotatedIcon(tileIcon, RotatedIcon.Rotate.DOWN));
+                        firstTile.setIcon(tileIcon);
+                        thirdTile.setIcon(tileIcon);
+                    } else {
+                        if ("p".equals(fulou.substring(4, 5))) {
+                            ImageIcon tileIcon = tileImageMap.get(fulou.substring(0, 2));
+                            thirdTile.setIcon(new RotatedIcon(tileIcon, RotatedIcon.Rotate.DOWN));
+                            secondTile.setIcon(tileIcon);
+                            firstTile.setIcon(tileIcon);
+                        }
+                    }
+                }
+                index = index + 7;
+                fulouPanel.add(firstTile);
+                fulouPanel.add(secondTile);
+                fulouPanel.add(thirdTile);
+            }
+            handPanel.add(fulouPanel);
+            riichiCheck.setVisible(false);
+        } else {
+            riichiCheck.setSelected(false);
+            riichiCheck.setEnabled(true);
+        }
+
+        handPanel.add(riichiCheck);
+
+        if (choiceTextLabel.getParent() != resultPanel) {
+            resultPanel.add(choiceTextLabel);
+        }
+        if (choiceTileLabel.getParent() != resultPanel) {
+            resultPanel.add(choiceTileLabel);
+        }
+        if (riichiLabel.getParent() != resultPanel) {
+            resultPanel.add(riichiLabel);
+        }
+
+        choiceTextLabel.setVisible(false);
+        choiceTileLabel.setVisible(false);
+        riichiLabel.setVisible(false);
+
+        submitButton.setEnabled(true);
+        nextButton.setEnabled(false);
         bookAnalyzeLabel.setIcon(analyzeMap.get(q.getQNo()));
         bookAnalyzeLabel.setVisible(false);
         analyzePanel.add(bookAnalyzeLabel);
@@ -202,6 +281,7 @@ public class MainFrame extends JFrame implements ActionListener {
         q.setHands(hands[0]);
         if (hands.length > 1) {
             // 有副露
+            q.setFulous(hands[1]);
         }
         // 答案
         q.setAnswer(split[4]);
@@ -211,6 +291,11 @@ public class MainFrame extends JFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == riichiCheck && riichiCheck.isSelected()) {
+            if (riichiCheck.isSelected()) {
+                riichiLabel.setVisible(true);
+            } else {
+                riichiLabel.setVisible(false);
+            }
             System.out.println("你选择了立直");
         } else {
             Object source = e.getSource();
@@ -223,16 +308,21 @@ public class MainFrame extends JFrame implements ActionListener {
                 ((TileButton)source).setBorderPainted(true);
                 String tile = ((TileButton)source).getTile();
                 choice = tile;
-                System.out.println(tile);
                 choiceTileLabel.setIcon(tileImageMap.get(tile));
-                resultPanel.add(choiceTextLabel);
-                resultPanel.add(choiceTileLabel);
+
+                choiceTextLabel.setVisible(true);
+                choiceTileLabel.setVisible(true);
+                if (riichiCheck.isSelected()) {
+                    riichiLabel.setVisible(true);
+                }
+
                 previousSelection = ((TileButton)source);
                 revalidate();
             }
 
             if (source == submitButton) {
                 totalQuestion++;
+                qIndex++;
                 Enumeration<AbstractButton> enumeration = handGroup.getElements();
                 if (handGroup.getSelection() == null) {
                     JOptionPane.showMessageDialog(this, "你还没选择", "Alert", JOptionPane.WARNING_MESSAGE);
@@ -242,16 +332,34 @@ public class MainFrame extends JFrame implements ActionListener {
                     }
                     riichiCheck.setEnabled(false);
                     submitButton.setEnabled(false);
-                    nextButton.setEnabled(true);
+
                     // 分析结果
+                    choice += (riichiCheck.isSelected()) ? "R" : "";
+                    System.out.println("Choice " + choice + " answer " + q.getAnswer());
                     if (choice.equals(q.getAnswer())) {
                         correctAnswer++;
                     }
-                    System.out.println("你答对" + totalQuestion + "中的" + correctAnswer + "题，正确率为" + String.format("%.2f",
-                        (correctAnswer / (totalQuestion * 1.0)) * 100) + "%");
+
+                    correctPercentageText =
+                        ("目前你答对" + totalQuestion + "中的" + correctAnswer + "题，正确率为" + String.format("%.2f",
+                            (correctAnswer / (totalQuestion * 1.0)) * 100) + "%");
+                    correctPercentageLabel.setText(correctPercentageText);
+                    resultPanel.add(correctPercentageLabel);
                     bookAnalyzeLabel.setVisible(true);
                     revalidate();
+
+                    if ((qIndex == questions.size())) {
+                        nextButton.setEnabled(false);
+                    } else {
+                        nextButton.setEnabled(true);
+                    }
+
                 }
+            }
+
+            if (source == nextButton) {
+                q = questions.get(qIndex);
+                createQuestion(q);
             }
         }
     }
