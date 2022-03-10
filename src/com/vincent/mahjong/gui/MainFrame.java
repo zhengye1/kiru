@@ -94,7 +94,7 @@ public class MainFrame extends JFrame implements ActionListener {
 
         // load all the analyze picture
         for (int i = 1; i <= 300; i++) {
-            String index = String.format("%03d", 42);
+            String index = String.format("%03d", i);
             ImageIcon analyzeIcon = new ImageIcon(getClass().getResource(ROOTPATH + index + "a.jpg"));
             averageAnalyzeHeight += analyzeIcon.getIconHeight();
             System.out.println("Index: " + index + " analyzeIcon Height?" + analyzeIcon.getIconHeight());
@@ -226,6 +226,7 @@ public class MainFrame extends JFrame implements ActionListener {
             riichiCheck.setVisible(false);
         } else {
             riichiCheck.setSelected(false);
+            riichiCheck.setVisible(true);
             riichiCheck.setEnabled(true);
         }
 
