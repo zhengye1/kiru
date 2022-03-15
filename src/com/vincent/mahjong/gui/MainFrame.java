@@ -14,10 +14,12 @@ import java.util.List;
  */
 public class MainFrame extends JFrame implements ActionListener {
 
+    boolean shuffle;
     // Create ConditionPanel
     JPanel conditionPanel = new JPanel();
     JLabel situationLabel;
     JLabel displayDoraLabel;
+    static final int MAX_QUESTION = 102;
 
     int averageAnalyzeHeight = 0;
     // Create Hand Panel
@@ -72,6 +74,13 @@ public class MainFrame extends JFrame implements ActionListener {
         initComponents();
     }
 
+    public MainFrame(boolean shuffle)
+        throws UnsupportedLookAndFeelException, IOException, ClassNotFoundException, InstantiationException,
+        IllegalAccessException {
+        this.shuffle = shuffle;
+        initComponents();
+    }
+
     private void initComponents()
         throws UnsupportedLookAndFeelException, ClassNotFoundException, InstantiationException, IllegalAccessException,
         IOException {
@@ -93,7 +102,7 @@ public class MainFrame extends JFrame implements ActionListener {
         }
 
         // load all the analyze picture
-        for (int i = 1; i <= 300; i++) {
+        for (int i = 1; i <= MAX_QUESTION; i++) {
             String index = String.format("%03d", i);
             ImageIcon analyzeIcon = new ImageIcon(getClass().getResource(ROOTPATH + index + "a.jpg"));
             averageAnalyzeHeight += analyzeIcon.getIconHeight();
@@ -263,7 +272,11 @@ public class MainFrame extends JFrame implements ActionListener {
             String line = reader.readLine();
             setQuestion(line);
         }
-        Collections.shuffle(questions);
+
+        if (shuffle) {
+            System.out.println("Shuffle?" + this.shuffle);
+            Collections.shuffle(questions);
+        }
         System.out.println("问题已经加载" + questions);
     }
 
@@ -336,7 +349,7 @@ public class MainFrame extends JFrame implements ActionListener {
 
                     // 分析结果
                     choice += (riichiCheck.isSelected()) ? "R" : "";
-                    System.out.println("Choice " + choice + " answer " + q.getAnswer());
+                    System.out.println("QNo: " + q.getQNo() + " Choice " + choice + " answer " + q.getAnswer());
                     if (choice.equals(q.getAnswer())) {
                         correctAnswer++;
                     }
