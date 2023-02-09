@@ -19,7 +19,7 @@ public class MainFrame extends JFrame implements ActionListener {
     JPanel conditionPanel = new JPanel();
     JLabel situationLabel;
     JLabel displayDoraLabel;
-    static final int MAX_QUESTION = 102;
+    static final int MAX_QUESTION = 117;
 
     int averageAnalyzeHeight = 0;
     // Create Hand Panel
@@ -46,8 +46,12 @@ public class MainFrame extends JFrame implements ActionListener {
     ButtonGroup handGroup = new ButtonGroup();
     List<TileButton> hands = new ArrayList<>(14);
     String text = "你的选择是";
+
     JLabel choiceTextLabel = new JLabel(text);
     JLabel choiceTileLabel = new JLabel();
+    String answerText = "回答";
+    String correctOrWrong = "错误";
+    JLabel answerCorrectLabel = new JLabel();
     JLabel riichiLabel = new JLabel("立直");
 
     String correctPercentageText = "";
@@ -132,6 +136,8 @@ public class MainFrame extends JFrame implements ActionListener {
         q = questions.get(qIndex);
         createQuestion(q);
 
+        answerCorrectLabel.setVisible(false);
+        resultPanel.add(answerCorrectLabel);
         resultPanel.add(correctPercentageLabel);
 
         getContentPane().setLayout(new GridBagLayout());
@@ -162,7 +168,6 @@ public class MainFrame extends JFrame implements ActionListener {
     }
 
     private void createQuestion(Question q) {
-
         // 导入场况
         situationLabel.setText(q.getSituation());
         displayDoraLabel.setIcon(displayDoraMap.get("d" + q.getDisplayDora()));
@@ -191,6 +196,11 @@ public class MainFrame extends JFrame implements ActionListener {
             handPanel.add(handButton);
         }
 
+        //清空fulou panel的东西
+        Arrays.asList(fulouPanel.getComponents()).stream().forEach((ab) -> {
+            fulouPanel.remove(ab);
+        });
+
         String fulous = q.getFulous();
 
         if (fulous != null && fulous.length() != 0) {
@@ -212,14 +222,13 @@ public class MainFrame extends JFrame implements ActionListener {
                     thirdTile.setIcon(tileImageMap.get(fulou.substring(5, 7)));
                 } else {
                     // 碰的情况
+                    ImageIcon tileIcon = tileImageMap.get(fulou.substring(0, 2));
                     if ("p".equals(fulou.substring(2, 3))) {
-                        ImageIcon tileIcon = tileImageMap.get(fulou.substring(0, 2));
                         secondTile.setIcon(new RotatedIcon(tileIcon, RotatedIcon.Rotate.DOWN));
                         firstTile.setIcon(tileIcon);
                         thirdTile.setIcon(tileIcon);
                     } else {
                         if ("p".equals(fulou.substring(4, 5))) {
-                            ImageIcon tileIcon = tileImageMap.get(fulou.substring(0, 2));
                             thirdTile.setIcon(new RotatedIcon(tileIcon, RotatedIcon.Rotate.DOWN));
                             secondTile.setIcon(tileIcon);
                             firstTile.setIcon(tileIcon);
@@ -274,10 +283,9 @@ public class MainFrame extends JFrame implements ActionListener {
         }
 
         if (shuffle) {
-            System.out.println("Shuffle?" + this.shuffle);
             Collections.shuffle(questions);
         }
-        System.out.println("问题已经加载" + questions);
+        System.out.println("问题已经加载完毕");
     }
 
     private void setQuestion(String line) {
@@ -351,9 +359,12 @@ public class MainFrame extends JFrame implements ActionListener {
                     choice += (riichiCheck.isSelected()) ? "R" : "";
                     System.out.println("QNo: " + q.getQNo() + " Choice " + choice + " answer " + q.getAnswer());
                     if (choice.equals(q.getAnswer())) {
+                        correctOrWrong = "正确";
                         correctAnswer++;
                     }
 
+                    answerCorrectLabel.setVisible(true);
+                    answerCorrectLabel.setText(answerText + correctOrWrong);
                     correctPercentageText =
                         ("目前你答对" + totalQuestion + "中的" + correctAnswer + "题，正确率为" + String.format("%.2f",
                             (correctAnswer / (totalQuestion * 1.0)) * 100) + "%");
@@ -372,6 +383,8 @@ public class MainFrame extends JFrame implements ActionListener {
             }
 
             if (source == nextButton) {
+                correctOrWrong = "错误";
+                answerCorrectLabel.setVisible(false);
                 q = questions.get(qIndex);
                 createQuestion(q);
             }
