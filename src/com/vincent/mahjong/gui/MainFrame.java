@@ -1,11 +1,17 @@
 package com.vincent.mahjong.gui;
 
+import com.vincent.mahjong.Test;
+import org.sqlite.SQLiteDataSource;
+import org.sqlite.SQLiteJDBCLoader;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.List;
 
@@ -36,6 +42,9 @@ public class MainFrame extends JFrame implements ActionListener {
 
     // Create Analyze Panel
     JPanel analyzePanel = new JPanel();
+
+    JPanel explanationPanel = new JPanel();
+    JTextArea explanationText = new JTextArea(50, 40);
     JLabel analyzeLabel = new JLabel();
     JLabel bookAnalyzeLabel = new JLabel();
 
@@ -72,26 +81,17 @@ public class MainFrame extends JFrame implements ActionListener {
     Map<String, ImageIcon> analyzeMap = new HashMap<>();
     final String ROOTPATH = "../../../../resources/";
 
-    public MainFrame()
-        throws UnsupportedLookAndFeelException, ClassNotFoundException, InstantiationException, IllegalAccessException,
-        IOException {
-        initComponents();
-    }
 
-    public MainFrame(boolean shuffle)
-        throws UnsupportedLookAndFeelException, IOException, ClassNotFoundException, InstantiationException,
-        IllegalAccessException {
+    public MainFrame(boolean shuffle) throws Exception {
         this.shuffle = shuffle;
         initComponents();
     }
 
-    private void initComponents()
-        throws UnsupportedLookAndFeelException, ClassNotFoundException, InstantiationException, IllegalAccessException,
-        IOException {
+    private void initComponents() throws Exception {
         defaultBorder = UIManager.getBorder("Button.border");
         cyanBorder = BorderFactory.createLineBorder(Color.CYAN, 2);
         compound = BorderFactory.createCompoundBorder(cyanBorder, defaultBorder);
-
+        explanationText.setFont(explanationText.getFont().deriveFont(16f));
         String[] tileString =
             {"0m", "1m", "2m", "3m", "4m", "5m", "6m", "7m", "8m", "9m", "0p", "1p", "2p", "3p", "4p", "5p", "6p", "7p",
                 "8p", "9p", "0s", "1s", "2s", "3s", "4s", "5s", "6s", "7s", "8s", "9s", "1z", "2z", "3z", "4z", "5z",
@@ -99,19 +99,21 @@ public class MainFrame extends JFrame implements ActionListener {
 
         // Create Icon
         // Create ToggleButton
-        for (String tile : Arrays.asList(tileString)) {
-            ImageIcon icon = new ImageIcon(getClass().getResource(ROOTPATH + tile + ".png"));
+        for (String tile : tileString) {
+            ImageIcon icon = new ImageIcon(Objects.requireNonNull(getClass().getResource(ROOTPATH + tile + ".png")));
             tileImageMap.put(tile, icon);
-            displayDoraMap.put("d" + tile, new ImageIcon(getClass().getResource(ROOTPATH + "d" + tile + ".png")));
+            displayDoraMap.put("d" + tile, new ImageIcon(
+                Objects.requireNonNull(getClass().getResource(ROOTPATH + "d" + tile + ".png"))));
         }
 
-        // load all the analyze picture
+        // load all the analysis picture
         for (int i = 1; i <= MAX_QUESTION; i++) {
             String index = String.format("%03d", i);
-            ImageIcon analyzeIcon = new ImageIcon(getClass().getResource(ROOTPATH + index + "a.jpg"));
+            ImageIcon analyzeIcon = new ImageIcon(
+                Objects.requireNonNull(getClass().getResource(ROOTPATH + index + "a.jpg")));
             averageAnalyzeHeight += analyzeIcon.getIconHeight();
             System.out.println("Index: " + index + " analyzeIcon Height?" + analyzeIcon.getIconHeight());
-            analyzeMap.put("" + index, analyzeIcon);
+            analyzeMap.put(index, analyzeIcon);
         }
 
         submitButton.addActionListener(this);
@@ -129,7 +131,8 @@ public class MainFrame extends JFrame implements ActionListener {
         //analyzePanel.add(analyzeLabel);
 
         // Load the question
-        loadQuestion();
+        // loadQuestion();
+        loadQuestionFromDB();
         JLabel resultLabel = new JLabel("结果");
         resultPanel.add(resultLabel);
         //load the first question
@@ -157,6 +160,9 @@ public class MainFrame extends JFrame implements ActionListener {
         c.gridy = 4;
         add(analyzePanel, c);
 
+        c.gridy = 5;
+        add(explanationPanel, c);
+
         setTitle("何切300/301训练");
         setLocation(50, 50);
         setPreferredSize(new Dimension(1024, 720));
@@ -179,12 +185,12 @@ public class MainFrame extends JFrame implements ActionListener {
         String[] hands = q.getHands().split("(?<=\\G.{2})");
 
         //清空handGroup的东西
-        Collections.list(handGroup.getElements()).stream().forEach((ab) -> {
+        Collections.list(handGroup.getElements()).forEach((ab) -> {
             handGroup.remove(ab);
         });
 
         // 清空hand panel的东西
-        Arrays.asList(handPanel.getComponents()).stream().forEach((ab) -> {
+        Arrays.asList(handPanel.getComponents()).forEach((ab) -> {
             handPanel.remove(ab);
         });
 
@@ -197,13 +203,13 @@ public class MainFrame extends JFrame implements ActionListener {
         }
 
         //清空fulou panel的东西
-        Arrays.asList(fulouPanel.getComponents()).stream().forEach((ab) -> {
+        Arrays.stream(fulouPanel.getComponents()).forEach((ab) -> {
             fulouPanel.remove(ab);
         });
 
         String fulous = q.getFulous();
 
-        if (fulous != null && fulous.length() != 0) {
+        if (fulous != null && !fulous.isEmpty()) {
             // 用天凤牌谱的写法分别是 c1m2m3m 1p1pp1p
             // 这暂时不考虑有杠的情况
             // 也就是 c = 吃只能出现在index 0, 而p = 碰只能出现在index 0, index 2, index 4
@@ -266,9 +272,17 @@ public class MainFrame extends JFrame implements ActionListener {
 
         submitButton.setEnabled(true);
         nextButton.setEnabled(false);
-        bookAnalyzeLabel.setIcon(analyzeMap.get(q.getQNo()));
+        bookAnalyzeLabel.setIcon(analyzeMap.get(String.format("%03d",q.getQNo())));
         bookAnalyzeLabel.setVisible(false);
         analyzePanel.add(bookAnalyzeLabel);
+        explanationText.setText(q.getExplanation());
+        explanationText.setLineWrap(true);
+        explanationText.setWrapStyleWord(true);
+        explanationText.setBorder(UIManager.getBorder("Label.border"));
+        explanationPanel.add(explanationText);
+
+        explanationPanel.setVisible(false);
+
         //revalidate();
 
     }
@@ -288,12 +302,31 @@ public class MainFrame extends JFrame implements ActionListener {
         System.out.println("问题已经加载完毕");
     }
 
+    private void loadQuestionFromDB() throws Exception{
+        SQLiteJDBCLoader.initialize();
+        SQLiteDataSource dataSource = new SQLiteDataSource();
+
+        dataSource.setUrl(
+            "jdbc:sqlite:" + Objects.requireNonNull(getClass().getResource(ROOTPATH + "kiru.sqlite")));
+        ResultSet rs =
+            dataSource.getConnection().createStatement().executeQuery("select * from \"questions\"");
+        while(rs.next()){
+            setQuestion(rs);
+        }
+        if (shuffle) {
+            Collections.shuffle(questions);
+        }
+        System.out.println("问题已经加载完毕");
+        rs.close();
+
+    }
+
     private void setQuestion(String line) {
         String[] split = line.split("&&");
         System.out.println(Arrays.asList(split));
         Question q = new Question();
         // 原题号
-        q.setQNo(split[0]);
+        q.setQNo(Integer.parseInt(split[0]));
         // 场况
         q.setSituation(split[1]);
         // 宝牌指示牌
@@ -307,6 +340,27 @@ public class MainFrame extends JFrame implements ActionListener {
         }
         // 答案
         q.setAnswer(split[4]);
+        questions.add(q);
+    }
+
+    private void setQuestion(ResultSet rs) throws SQLException {
+        Question q = new Question();
+        // 原题号
+        q.setQNo(rs.getInt("questionNo"));
+        // 场况
+        q.setSituation(rs.getString("situation"));
+        // 宝牌指示牌
+        q.setDisplayDora(rs.getString("doraIndicator"));
+        // 手牌 （包括副露）
+        String[] hands = rs.getString("question").split("\\|");
+        q.setHands(hands[0]);
+        if (hands.length > 1) {
+            // 有副露
+            q.setFulous(hands[1]);
+        }
+        // 答案
+        q.setAnswer(rs.getString("answer"));
+        q.setExplanation(rs.getString("explanation"));
         questions.add(q);
     }
 
@@ -371,6 +425,7 @@ public class MainFrame extends JFrame implements ActionListener {
                     correctPercentageLabel.setText(correctPercentageText);
                     resultPanel.add(correctPercentageLabel);
                     bookAnalyzeLabel.setVisible(true);
+                    explanationPanel.setVisible(true);
                     revalidate();
 
                     if ((qIndex == questions.size())) {

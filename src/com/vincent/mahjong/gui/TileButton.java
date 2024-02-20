@@ -1,7 +1,11 @@
 package com.vincent.mahjong.gui;
 
+import lombok.Data;
+import lombok.Getter;
+
 import javax.swing.*;
 
+@Getter
 public class TileButton extends JToggleButton {
     String tile;
 
@@ -10,7 +14,4 @@ public class TileButton extends JToggleButton {
         this.setIcon(icon);
     }
 
-    public String getTile(){
-        return this.tile;
-    }
 }

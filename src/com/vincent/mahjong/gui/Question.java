@@ -6,12 +6,11 @@ import lombok.ToString;
 @Data
 @ToString
 public class Question {
-    String qNo;
+    Integer qNo;
     String situation;
     String displayDora;
     String hands;
     String fulous;
     String answer;
-
-
+    String explanation;
 }

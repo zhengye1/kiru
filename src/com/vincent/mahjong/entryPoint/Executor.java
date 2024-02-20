@@ -27,16 +27,11 @@ public class Executor extends JFrame{
             try {
                 dispose();
                 new MainFrame(shuffle);
-            } catch (UnsupportedLookAndFeelException ex) {
+            } catch (UnsupportedLookAndFeelException | IOException | IllegalAccessException | InstantiationException |
+                     ClassNotFoundException ex) {
                 ex.printStackTrace();
-            } catch (ClassNotFoundException ex) {
-                ex.printStackTrace();
-            } catch (InstantiationException ex) {
-                ex.printStackTrace();
-            } catch (IllegalAccessException ex) {
-                ex.printStackTrace();
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
             }
         });
 
