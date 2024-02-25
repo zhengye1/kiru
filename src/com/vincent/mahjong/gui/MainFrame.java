@@ -81,6 +81,7 @@ public class MainFrame extends JFrame implements ActionListener {
     Map<String, ImageIcon> analyzeMap = new HashMap<>();
     final String ROOTPATH = "../../../../resources/";
 
+    List<Question> wrongQuestions = new ArrayList<>();
 
     public MainFrame(boolean shuffle) throws Exception {
         this.shuffle = shuffle;
@@ -115,6 +116,7 @@ public class MainFrame extends JFrame implements ActionListener {
             System.out.println("Index: " + index + " analyzeIcon Height?" + analyzeIcon.getIconHeight());
             analyzeMap.put(index, analyzeIcon);
         }
+
 
         submitButton.addActionListener(this);
         nextButton.addActionListener(this);
@@ -176,7 +178,7 @@ public class MainFrame extends JFrame implements ActionListener {
     private void createQuestion(Question q) {
         // 导入场况
         situationLabel.setText(q.getSituation());
-        displayDoraLabel.setIcon(displayDoraMap.get("d" + q.getDisplayDora()));
+        displayDoraLabel.setIcon(displayDoraMap.get("d" + q.getDoraIndicator()));
         conditionPanel.add(situationLabel);
         conditionPanel.add(displayDoraLabel);
 
@@ -193,6 +195,8 @@ public class MainFrame extends JFrame implements ActionListener {
         Arrays.asList(handPanel.getComponents()).forEach((ab) -> {
             handPanel.remove(ab);
         });
+
+
 
         for (String hand : hands) {
             TileButton handButton = new TileButton(hand, tileImageMap.get(hand));
@@ -330,7 +334,7 @@ public class MainFrame extends JFrame implements ActionListener {
         // 场况
         q.setSituation(split[1]);
         // 宝牌指示牌
-        q.setDisplayDora(split[2]);
+        q.setDoraIndicator(split[2]);
         // 手牌 （包括副露）
         String[] hands = split[3].split("\\|");
         q.setHands(hands[0]);
@@ -350,7 +354,7 @@ public class MainFrame extends JFrame implements ActionListener {
         // 场况
         q.setSituation(rs.getString("situation"));
         // 宝牌指示牌
-        q.setDisplayDora(rs.getString("doraIndicator"));
+        q.setDoraIndicator(rs.getString("doraIndicator"));
         // 手牌 （包括副露）
         String[] hands = rs.getString("question").split("\\|");
         q.setHands(hands[0]);
@@ -415,6 +419,8 @@ public class MainFrame extends JFrame implements ActionListener {
                     if (choice.equals(q.getAnswer())) {
                         correctOrWrong = "正确";
                         correctAnswer++;
+                    }else{
+                        wrongQuestions.add(q);
                     }
 
                     answerCorrectLabel.setVisible(true);
@@ -430,6 +436,8 @@ public class MainFrame extends JFrame implements ActionListener {
 
                     if ((qIndex == questions.size())) {
                         nextButton.setEnabled(false);
+                        // 在这应该全部完成答题了
+                        System.out.println("错题: " + wrongQuestions);
                     } else {
                         nextButton.setEnabled(true);
                     }

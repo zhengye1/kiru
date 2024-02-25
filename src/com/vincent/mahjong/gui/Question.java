@@ -8,7 +8,7 @@ import lombok.ToString;
 public class Question {
     Integer qNo;
     String situation;
-    String displayDora;
+    String doraIndicator;
     String hands;
     String fulous;
     String answer;
