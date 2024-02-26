@@ -1,6 +1,5 @@
 package com.vincent.mahjong.gui;
 
-import com.vincent.mahjong.Test;
 import org.sqlite.SQLiteDataSource;
 import org.sqlite.SQLiteJDBCLoader;
 
